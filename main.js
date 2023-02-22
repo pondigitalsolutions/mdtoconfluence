@@ -18,7 +18,7 @@ var config = {
   password: getInput('auth_password'),
   baseUrl: getInput('confluence_url'),
   space: getInput('confluence_space_key'),
-  baseFolder: getInput('base_folder')
+  baseFolder: '/github/workspace' + getInput('base_folder')
 };
 var confluence = new ConfluenceClient({
   host: config.baseUrl,
