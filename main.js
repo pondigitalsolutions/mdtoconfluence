@@ -15,7 +15,7 @@ import { create } from '@actions/glob';
 
 var config = {
   username: getInput('auth_username'),
-  password: getInput('auth_password'),
+  password: getInput('auth_api_token'),
   baseUrl: getInput('confluence_url'),
   space: getInput('confluence_space_key'),
   baseFolder: path.join('/github/workspace', getInput('base_folder'))
