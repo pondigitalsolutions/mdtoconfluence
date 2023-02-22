@@ -14,11 +14,11 @@ import { getInput } from '@actions/core';
 import { create } from '@actions/glob';
 
 var config = {
-  username: process.env.INPUTS_AUTH_USERNAME,
-  password: process.env.INPUTS_AUTH_PASSWORD,
-  baseUrl: process.env.INPUTS_CONFLUENCE_URL,
-  space: process.env.INPUTS_CONFLUENCE_SPACE_KEY,
-  baseFolder: path.join('/github/workspace', process.env.INPUTS_BASE_FOLDER)
+  username: getInput('auth_username'),
+  password: getInput('auth_password'),
+  baseUrl: getInput('confluence_url'),
+  space: getInput('confluence_space_key'),
+  baseFolder: path.join('/github/workspace', getInput('base_folder'))
 };
 var confluence = new ConfluenceClient({
   host: config.baseUrl,
