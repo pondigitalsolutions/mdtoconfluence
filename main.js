@@ -14,11 +14,11 @@ import { getInput } from '@actions/core';
 import { create } from '@actions/glob';
 
 var config = {
-  username: getInput('auth_username'),
-  password: getInput('auth_password'),
-  baseUrl: getInput('confluence_url'),
-  space: getInput('confluence_space_key'),
-  baseFolder: path.join('/github/workspace', getInput('base_folder'))
+  username: process.env.INPUTS_AUTH_USERNAME,
+  password: process.env.INPUTS_AUTH_PASSWORD,
+  baseUrl: process.env.INPUTS_CONFLUENCE_URL,
+  space: process.env.INPUTS_CONFLUENCE_SPACE_KEY,
+  baseFolder: path.join('/github/workspace', process.env.INPUTS_BASE_FOLDER)
 };
 var confluence = new ConfluenceClient({
   host: config.baseUrl,
@@ -63,7 +63,6 @@ for (const file of mdFiles) {
   const markdown = await readFile(path.join(config.baseFolder, file), {
     encoding: 'utf-8'
   })
-  console.log(markdown)
   const mdast = fromMarkdown(markdown, {
     extensions: [gfm(), math()],
     mdastExtensions: [gfmFromMarkdown(), mathFromMarkdown()],
