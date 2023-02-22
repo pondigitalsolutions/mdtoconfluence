@@ -6,6 +6,8 @@ RUN apk add --no-cache jq bash git
 
 COPY . .
 
+RUN npm install
+
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
