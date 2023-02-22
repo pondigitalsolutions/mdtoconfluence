@@ -13,7 +13,6 @@ import { gfm } from 'micromark-extension-gfm';
 import { math } from 'micromark-extension-math';
 import texsvg from 'texsvg';
 import { getInput } from '@actions/core';
-import { create } from '@actions/glob';
 
 dotenv.config()
 var config = {
@@ -88,7 +87,7 @@ for (const file of files) {
         responseType: 'arraybuffer'
       })
       const buffer = await response.data
-      await writeFile(path.join(config.baseFolder, image), toBuffer(buffer))
+      await writeFile(path.join('/.cache/md', image), toBuffer(buffer))
       assets.push(image)
       return {
         type: 'image',
@@ -98,7 +97,7 @@ for (const file of files) {
     if (node.type === 'math' || node.type === 'inlineMath') {
       const svg = await texsvg(node.value);
       const image = file.replace('.md', '-' + assets.length + '.svg')
-      await writeFile(path.join(config.baseFolder, image), svg)
+      await writeFile(path.join('/.cache/md', image), svg)
       assets.push(image)
       return {
         type: 'image',
@@ -191,7 +190,7 @@ for (const file of files) {
         key: config.space
       },
       attachments: await asyncMap(assets, async (asset) => ({
-        file: await readFile(path.join(config.baseFolder, asset)),
+        file: await readFile(path.join('/.cache/md', asset)),
         filename: asset,
         comment: 'Uploaded by exact-gateway',
         minorEdit: true,

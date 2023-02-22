@@ -9,5 +9,7 @@ COPY . .
 RUN npm install
 
 RUN chmod +x /entrypoint.sh
+RUN mkdir /.cache/md
+RUN chmod 777 /.cache/md
 
 ENTRYPOINT ["/entrypoint.sh"]
