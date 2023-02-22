@@ -80,7 +80,7 @@ for (const file of files) {
       }
     }
     if (node.type === 'code' && node.lang === 'mermaid') {
-      const image = file.replace('.md', '-' + assets.length + '.png')
+      const image = 'img-' + assets.length + '.png'
       const response = await axios.request({
         url: 'https://mermaid.ink/img/' + encodeURIComponent(Buffer.from(node.value).toString('base64')),
         method: 'GET',
@@ -96,7 +96,7 @@ for (const file of files) {
     }
     if (node.type === 'math' || node.type === 'inlineMath') {
       const svg = await texsvg(node.value);
-      const image = file.replace('.md', '-' + assets.length + '.svg')
+      const image = 'img-' + assets.length + '.png'
       await writeFile(path.join('/.cache/md', image), svg)
       assets.push(image)
       return {
