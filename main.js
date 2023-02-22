@@ -1,7 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import axios from 'axios';
 import { ConfluenceClient } from 'confluence.js';
 import * as dotenv from 'dotenv';
+import FastGlob from 'fast-glob';
 import { toHtml } from 'hast-util-to-html';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
@@ -13,12 +15,13 @@ import texsvg from 'texsvg';
 import { getInput } from '@actions/core';
 import { create } from '@actions/glob';
 
+dotenv.config()
 var config = {
-  username: getInput('auth_username'),
-  password: getInput('auth_api_token'),
-  baseUrl: getInput('confluence_url'),
-  space: getInput('confluence_space_key'),
-  baseFolder: path.join('/github/workspace', getInput('base_folder'))
+  username: getInput('auth_username') || process.env.auth_username,
+  password: getInput('auth_api_token') || process.env.auth_api_token,
+  baseUrl: getInput('confluence_url') || process.env.confluence_url,
+  space: getInput('confluence_space_key') || process.env.confluence_space_key,
+  baseFolder: getInput('base_folder') ? path.join('/github/workspace', getInput('base_folder')) : process.env.base_folder
 };
 var confluence = new ConfluenceClient({
   host: config.baseUrl,
@@ -30,12 +33,9 @@ var confluence = new ConfluenceClient({
     }
   }
 });
-const globber = await create(path.join(config.baseFolder, '**/*.md'))
-const files = await globber.glob()
-const mdFiles = files.map(file => {
-  return file.replace(config.baseFolder, '')
+const files = await FastGlob( '**/*.md', {
+  cwd: config.baseFolder
 })
-
 let configFile = {}
 try {
   configFile = JSON.parse(await readFile(path.join(config.baseFolder, 'settings.json')))
@@ -59,7 +59,7 @@ const toBuffer = (arrayBuffer) => {
   }
   return buffer;
 }
-for (const file of mdFiles) {
+for (const file of files) {
   const markdown = await readFile(path.join(config.baseFolder, file), {
     encoding: 'utf-8'
   })
@@ -82,8 +82,12 @@ for (const file of mdFiles) {
     }
     if (node.type === 'code' && node.lang === 'mermaid') {
       const image = file.replace('.md', '-' + assets.length + '.png')
-      const response = await fetch('https://mermaid.ink/img/' + encodeURIComponent(Buffer.from(node.value).toString('base64')))
-      const buffer = await response.arrayBuffer()
+      const response = await axios.request({
+        url: 'https://mermaid.ink/img/' + encodeURIComponent(Buffer.from(node.value).toString('base64')),
+        method: 'GET',
+        responseType: 'arraybuffer'
+      })
+      const buffer = await response.data
       await writeFile(path.join(config.baseFolder, image), toBuffer(buffer))
       assets.push(image)
       return {
@@ -115,6 +119,7 @@ for (const file of mdFiles) {
   html = html.replace(/<img src="(.*?)" \/>/g, '<ac:image><ri:attachment ri:filename="$1" /></ac:image>')
 
   const title = file.replace('/index.md', '').replace('.md', '').split('/').reverse()[0]
+  console.log(config)
 
   const content = await confluence.content.getContent({
     spaceKey: config.space,
@@ -125,15 +130,16 @@ for (const file of mdFiles) {
   let version = 1;
   const parent = file.replace('/index', '').split('/').reverse()?.[1]
   let parentId = configFile?.parent_id
-  console.log(parent)
   if (parent) {
     const parentContent = await confluence.content.getContent({
       spaceKey: config.space,
       title: parent,
     })
+    console.log(`Parent: ${parent}`)
     parentId = parentContent.results[0].id
   }
   if (content.results.length === 0) {
+    console.log(`Create content: ${file}`)
     const newPage = await new Promise(r => confluence.content.createContent({
       space: {
         key: config.space
@@ -154,6 +160,7 @@ for (const file of mdFiles) {
     id = newPage.id
   } else {
     id = content.results[0].id
+    console.log(`Update content: ${file}`)
     const getContentById = await confluence.content.getContentById({
       id
     })
