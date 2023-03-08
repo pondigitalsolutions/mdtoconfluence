@@ -110,7 +110,7 @@ for (const file of files) {
       const svg = await texsvg(node.value);
       const image = 'img-' + assets.length + '.png'
       const png = await svg2png(svg, {
-        scale: 2,
+        scale:  node.type === 'inlineMath' ? 1 : 2,
         backgroundColor: '#fff'
       })
       await writeFile(path.join( tempdir + '/.cache/md', image), png)
@@ -189,20 +189,17 @@ if (content.results.length > 0) {
 
     id = content.results[0].id
     if (assets.length) {
-      console.log(version)
       await confluence.contentAttachments.createOrUpdateAttachments({
         space: {
           key: config.space
         },
-        attachments: await asyncMap(assets, async (asset) => {
-          console.log(asset)
-          return {
+        attachments: await asyncMap(assets, async (asset) => ({
           file: await readFile(path.join(tempdir + '/.cache/md', asset)),
           filename: asset,
           comment: 'Uploaded by exact-gateway',
           minorEdit: true,
 
-        }}),
+        })),
         id,
         version: {
           number: version,
