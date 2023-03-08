@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import axios from 'axios';
 import { ConfluenceClient } from 'confluence.js';
+import { convert } from 'convert-svg-to-png';
 import * as dotenv from 'dotenv';
 import FastGlob from 'fast-glob';
 import { toHtml } from 'hast-util-to-html';
@@ -97,11 +98,14 @@ for (const file of files) {
     if (node.type === 'math' || node.type === 'inlineMath') {
       const svg = await texsvg(node.value);
       const image = 'img-' + assets.length + '.png'
-      await writeFile(path.join('/.cache/md', image), svg)
+      const png = await convert(svg, {
+        scale: 2
+      })
+      await writeFile(path.join('/.cache/md', image), png)
       assets.push(image)
       return {
         type: 'image',
-        url: image,
+        url: image
       }
     }
     return node
